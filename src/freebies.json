@@ -1,0 +1,12 @@
+[
+    {
+	"name": "stickers",
+	"amount": 1000,
+	"background": "purple"
+    },
+    {
+	"name": "mugs",
+	"amount": 10,
+	"background": "orange"
+    }
+]
