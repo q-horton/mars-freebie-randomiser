@@ -1,51 +1,48 @@
-import json
+from app import *
+from goodies import *
 import tkinter as tk
-from PIL import ImageTk, Image
+import RPi.GPIO as GPIO
+import signal
+import sys
+
+
+BUTTON_PIN = 14
 
 
 def main():
-    global data
-    data = pullJSON("freebies.json")
-    app()
+	GPIO.setmode(GPIO.BCM)
+	GPIO.setup(BUTTON_PIN, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+	GPIO.add_event_detect(BUTTON_PIN, GPIO.FALLING,
+			callback=button_callback, bouncetime=250)
+	signal.signal(signal.SIGINT, exit_handler)
+	
+	global goodies
+	goodies = Goodies("./freebies.json")
+
+	global app
+	app = App()
+	app.window.after(1000, app.check_int)
+	app.window.bind_all('<Control-c>', exit_handler)
+
+	global button_protect
+	button_protect = False
+
+	app.run_app()
 
 
-def pullJSON(file: str) -> list:
-    f = open(file)
-    data = json.load(f)
-    f.close()
-    return data
+def exit_handler(sig, frame):
+	GPIO.cleanup()
+	app.window.destroy()
+	sys.exit(0)
 
 
-def app():
-    window = tk.Tk()
-    window.attributes("-fullscreen", True)
-    window.title("Mars Freebie Randomiser")
-
-    logoFrame = tk.Frame(window)
-    logoFrame.pack(side=tk.TOP)
-    loadLogo = Image.open("./mars-logo.png")
-    logoHeight = int(window.winfo_screenheight() / 5)
-    logoWidth = int(logoHeight * loadLogo.width / loadLogo.height)
-    logoCanvas = tk.Canvas(logoFrame, bg="#17171F", height=logoHeight*1.2,
-                           width=window.winfo_screenwidth(),
-                           highlightthickness=0)
-    logoCanvas.pack()
-    logo = ImageTk.PhotoImage(loadLogo.resize((logoWidth, logoHeight),
-                                              Image.NEAREST))
-    logoCanvas.create_image(window.winfo_screenwidth()/2, logoHeight*0.6,
-                            image=logo)
-
-    displayFrame = tk.Frame(window)
-    displayFrame.pack(side=tk.BOTTOM)
-    displayHeight = int(window.winfo_screenheight() * (1 - 1.2 / 5)) + 1
-    displayCanvas = tk.Canvas(displayFrame, bg="green", height=displayHeight,
-                              width=window.winfo_screenwidth(),
-                              highlightthickness=0)
-    displayCanvas.pack()
-    displayCanvas.create_text(window.winfo_screenwidth()/2, displayHeight/2,
-                              text="Press the button to spin!")
-
-    window.mainloop()
+def button_callback(channel):
+	global button_protect, goodies, app
+	if not button_protect:
+		button_protect = True
+		reward, colour = goodies.draw_goodie()
+		app.update_display(reward, colour)
+		button_protect = False
 
 
 if __name__ == "__main__":
