@@ -1,12 +1,17 @@
 [
     {
-	"name": "stickers",
-	"amount": 1000,
-	"background": "purple"
+		"name": "stickers",
+		"amount": 1000,
+		"background": "purple"
     },
     {
-	"name": "mugs",
-	"amount": 10,
-	"background": "orange"
-    }
+		"name": "mug",
+		"amount": 10,
+		"background": "orange"
+    },
+	{
+		"name": "usb",
+		"amount": 100,
+		"background": "green"
+	}
 ]
